@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NHS Labs · Instructor Timetable</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <h1>Instructor Timetable</h1>
+      <p>Book a lab. Nobody else can take it at the same time.</p>
+    </div>
+    <div class="controls">
+      <label class="who">
+        <span>I am</span>
+        <select id="who"></select>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="onlyMine" />
+        <span>Highlight only mine</span>
+      </label>
+      <span id="status" class="status" title="Connection status">●</span>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <section class="legend" id="legend"></section>
+
+  <main class="wrap">
+    <div id="grid" class="grid" role="table" aria-label="Weekly timetable"></div>
+  </main>
+
+  <dialog id="dlg">
+    <form method="dialog" id="dlgForm">
+      <h2 id="dlgTitle"></h2>
+      <div id="dlgBody"></div>
+      <div class="actions" id="dlgActions"></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
