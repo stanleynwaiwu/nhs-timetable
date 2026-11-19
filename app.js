@@ -162,26 +162,92 @@ function render() {
     for (const [d] of DAYS) {
       const key = keyOf(d, h), slot = bookings[key] || {};
       html += `<div class="cell ${d === todayShort ? "today" : ""}">`;
-      for (const v of Object.keys(VENUES)) {
-        const b = slot[v];
-        if (b) {
-          const who = instr(b.instructor) || { name: "Unknown", color: "#6b7280" };
-          const mine = b.instructor === me;
-          const dim = onlyMine && !mine ? "dim" : "";
-          html += `<button class="slot booked ${mine ? "mine" : ""} ${dim}" style="--c:${who.color}"
-            data-key="${key}" data-venue="${v}" title="${VENUES[v]} · ${who.name} · ${esc(b.course)}">
-            <span class="v">${VENUES[v]}</span>
-            <span class="who-name">${who.name}</span>
-            <span class="course">${esc(b.course)}</span></button>`;
-        } else {
-          html += `<button class="slot free ${onlyMine ? "dim" : ""}" data-key="${key}" data-venue="${v}">
-            <span class="v">${VENUES[v]}</span><span>+ Free</span></button>`;
-        }
-      }
+      for (const v of Object.keys(VENUES)) html += slotHtml(key, v, slot, onlyMine);
       html += `</div>`;
     }
   }
   grid.innerHTML = html;
+  renderMobile();
+}
+
+// One lab tile (used by both the desktop grid and the phone view)
+function slotHtml(key, v, slot, onlyMine) {
+  const b = slot[v];
+  if (b) {
+    const who = instr(b.instructor) || { name: "Unknown", color: "#6b7280" };
+    const mine = b.instructor === me;
+    const dim = onlyMine && !mine ? "dim" : "";
+    return `<button class="slot booked ${mine ? "mine" : ""} ${dim}" style="--c:${who.color}"
+            data-key="${key}" data-venue="${v}" title="${VENUES[v]} · ${who.name} · ${esc(b.course)}">
+            <span class="v">${VENUES[v]}</span>
+            <span class="who-name">${who.name}</span>
+            <span class="course">${esc(b.course)}</span></button>`;
+  }
+  return `<button class="slot free ${onlyMine ? "dim" : ""}" data-key="${key}" data-venue="${v}">
+            <span class="v">${VENUES[v]}</span><span>+ Free</span></button>`;
+}
+
+/* ---------- Phone view: one day at a time ---------- */
+const SHORT_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+let mDay = DAYS.some((d) => d[0] === SHORT_DAYS[new Date().getDay()]) ? SHORT_DAYS[new Date().getDay()] : "Mon";
+
+function dayCount(d) {
+  let n = 0;
+  for (const h of HOURS) n += Object.keys(bookings[keyOf(d, h)] || {}).filter((v) => VENUES[v]).length;
+  return n;
+}
+
+function renderMobile() {
+  const box = $("#mobile");
+  if (!box) return;
+  const onlyMine = $("#onlyMine").checked && me;
+  const now = new Date();
+  const todayShort = SHORT_DAYS[now.getDay()];
+  const total = HOURS.length * Object.keys(VENUES).length;
+  const taken = dayCount(mDay);
+  const pct = Math.round((taken / total) * 100);
+
+  const chips = INSTRUCTORS.map((i) =>
+    `<button class="chip ${i.id === me ? "on" : ""}" style="--c:${i.color}" data-who="${i.id}">
+      <i class="dot" style="background:${i.color}"></i>${i.name}</button>`).join("");
+
+  let rows = "";
+  for (const h of HOURS) {
+    const key = keyOf(mDay, h), slot = bookings[key] || {};
+    const isNow = mDay === todayShort && h === now.getHours();
+    rows += `<div class="m-hour ${isNow ? "now" : ""}">
+      <div class="m-time"><b>${pad(h)}</b><small>:00</small></div>
+      <div class="m-tiles">${Object.keys(VENUES).map((v) => slotHtml(key, v, slot, onlyMine)).join("")}</div>
+    </div>`;
+  }
+
+  const tabs = DAYS.map(([s]) =>
+    `<button class="m-tab ${s === mDay ? "on" : ""} ${s === todayShort ? "today" : ""}" data-day="${s}">
+      <span>${s}</span><em>${dayCount(s)}</em></button>`).join("");
+
+  box.innerHTML = `
+    <div class="m-who">
+      <span>${me ? "Booking as" : "Tap your name to start"}</span>
+      <div class="chips">${chips}</div>
+    </div>
+    <div class="m-day">
+      <h2>${dayName(mDay)}${mDay === todayShort ? ' <small>Today</small>' : ""}</h2>
+      <p>${taken} of ${total} lab slots taken</p>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+    </div>
+    <div class="m-hours">${rows}</div>
+    <nav class="m-nav" aria-label="Choose a day">${tabs}</nav>`;
+}
+
+function onMobileClick(e) {
+  const tab = e.target.closest("[data-day]");
+  if (tab) { mDay = tab.dataset.day; renderMobile(); window.scrollTo({ top: 0 }); return; }
+  const chip = e.target.closest("[data-who]");
+  if (chip) {
+    me = chip.dataset.who; localStorage.setItem("nhs_me", me);
+    $("#who").value = me; render(); return;
+  }
+  onSlotClick(e);
 }
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -286,6 +352,7 @@ async function init() {
   setupHeader();
   render();
   $("#grid").addEventListener("click", onSlotClick);
+  $("#mobile").addEventListener("click", onMobileClick);
   backend = await createBackend();
   if (backend.mode === "local") {
     const b = $("#banner");

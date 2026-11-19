@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>NHS Labs · Instructor Timetable</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -32,6 +32,9 @@
   <main class="wrap">
     <div id="grid" class="grid" role="table" aria-label="Weekly timetable"></div>
   </main>
+
+  <!-- Phone / small-tablet view (hidden on desktop by CSS) -->
+  <div id="mobile" class="mobile"></div>
 
   <dialog id="dlg">
     <form method="dialog" id="dlgForm">
