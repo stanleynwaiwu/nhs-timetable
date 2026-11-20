@@ -7,34 +7,46 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="top">
-    <div class="brand">
-      <h1>Instructor Timetable</h1>
-      <p>Book a lab. Nobody else can take it at the same time.</p>
+  <!-- 1) Loading -->
+  <div id="boot" class="boot"><div class="spin" aria-label="Loading"></div></div>
+
+  <!-- 2) Sign in / create account / waiting for approval -->
+  <div id="auth" class="auth" hidden></div>
+
+  <!-- 3) The app (only for signed-in, approved people) -->
+  <div id="app" hidden>
+    <header class="top">
+      <div class="brand">
+        <h1>Instructor Timetable</h1>
+        <p>Book a lab. Nobody else can take it at the same time.</p>
+      </div>
+      <div class="controls">
+        <label class="toggle">
+          <input type="checkbox" id="onlyMine" />
+          <span>Highlight only mine</span>
+        </label>
+        <span id="status" class="status" title="Connection status">●</span>
+        <button id="acct" class="acct" type="button" aria-label="Your account"></button>
+      </div>
+    </header>
+
+    <div id="banner" class="banner" hidden></div>
+
+    <nav id="sections" class="sections" aria-label="Sections" hidden></nav>
+
+    <div id="sec-timetable">
+      <section class="legend" id="legend"></section>
+
+      <main class="wrap">
+        <div id="grid" class="grid" role="table" aria-label="Weekly timetable"></div>
+      </main>
+
+      <!-- Phone / small-tablet view (hidden on desktop by CSS) -->
+      <div id="mobile" class="mobile"></div>
     </div>
-    <div class="controls">
-      <label class="who">
-        <span>I am</span>
-        <select id="who"></select>
-      </label>
-      <label class="toggle">
-        <input type="checkbox" id="onlyMine" />
-        <span>Highlight only mine</span>
-      </label>
-      <span id="status" class="status" title="Connection status">●</span>
-    </div>
-  </header>
 
-  <div id="banner" class="banner" hidden></div>
-
-  <section class="legend" id="legend"></section>
-
-  <main class="wrap">
-    <div id="grid" class="grid" role="table" aria-label="Weekly timetable"></div>
-  </main>
-
-  <!-- Phone / small-tablet view (hidden on desktop by CSS) -->
-  <div id="mobile" class="mobile"></div>
+    <section id="sec-admin" class="admin" hidden></section>
+  </div>
 
   <dialog id="dlg">
     <form method="dialog" id="dlgForm">

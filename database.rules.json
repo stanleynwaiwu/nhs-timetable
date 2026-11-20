@@ -1,0 +1,35 @@
+{
+  "rules": {
+    "admins": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && root.child('admins').child(auth.uid).exists()"
+      }
+    },
+    "users": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && root.child('admins').child(auth.uid).exists()",
+        ".validate": "newData.hasChildren(['name', 'email'])"
+      }
+    },
+    "pending": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).exists()",
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).exists())",
+        ".validate": "newData.hasChildren(['name', 'email'])"
+      }
+    },
+    "bookings": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).exists() || root.child('admins').child(auth.uid).exists())",
+      "$slot": {
+        "$venue": {
+          ".write": "auth != null && (root.child('admins').child(auth.uid).exists() || (root.child('users').child(auth.uid).child('instructorId').exists() && ((!data.exists() && newData.exists() && newData.child('instructor').val() === root.child('users').child(auth.uid).child('instructorId').val() && root.child('bookings').child($slot).child($venue === 'old' ? 'new' : 'old').child('instructor').val() !== root.child('users').child(auth.uid).child('instructorId').val()) || (data.exists() && !newData.exists() && data.child('instructor').val() === root.child('users').child(auth.uid).child('instructorId').val()))))",
+          ".validate": "($venue === 'old' || $venue === 'new') && newData.child('instructor').isString() && newData.child('course').isString() && newData.child('course').val().length > 0 && newData.child('course').val().length <= 80"
+        }
+      }
+    }
+  }
+}

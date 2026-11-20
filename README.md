@@ -2,52 +2,25 @@
 
 A live, shared timetable that stops instructors clashing in the two labs (Old NHS Lab / New NHS Lab), Monday to Friday, one-hour lessons.
 
-**Rules it enforces**
-1. One lab, one hour = one instructor. A second instructor trying to take it is told who has it and to contact them.
-2. An instructor can't be booked in both labs in the same hour.
-3. Only the person who made a booking can cancel it (in the app).
+## What it does
+- **Accounts:** instructors sign in with email and password. An **admin** approves each new account and links it to an instructor profile (Mr Stanley, Miss Inem, Mr Femi).
+- **Clash prevention:** one lab, one hour = one instructor. Someone else trying it is told who has it. An instructor can't be in both labs in the same hour. These rules are enforced **on the server** (see `database.rules.json`), not just in the page.
+- **Ownership:** you can only book and cancel as yourself. Admins can also remove any booking.
+- **Admin section:** approve or decline sign-ups, link accounts to instructor profiles, make or remove admins, remove access.
+- **Phone view:** one day at a time with a floating Mon-Fri bar (screens 900px wide or less). The desktop grid is unchanged.
 
-The check runs as an atomic Firebase transaction, so even simultaneous clicks can't both succeed.
+## Files
+`index.html` · `style.css` · `app.js` (screens) · `store.js` (accounts and database) · `constants.js` (days, hours, labs, instructors, clash rule) · `config.js` (your Firebase keys) · `database.rules.json` (security rules)
 
-## Why Firebase?
-GitHub Pages only hosts static files. To let all three instructors see the same data, bookings must live in a shared database. Firebase Realtime Database's free tier is plenty for this.
-
-## Setup (about 5 minutes)
-
-### Step 1: Create the database
-1. Go to <https://console.firebase.google.com> → **Add project** (any name, skip Analytics).
-2. **Build → Realtime Database → Create Database** (pick any region, start in *locked mode*).
-3. **Project settings (gear) → General → Your apps → Web (`</>`)**, register an app, and copy the `firebaseConfig` values.
-4. Paste them into `config.js`. Make sure `databaseURL` is included (it's shown in the Realtime Database page).
-
-### Step 2: Set the database rules
-In **Realtime Database → Rules**, paste and **Publish**:
-
-```json
-{
-  "rules": {
-    "bookings": {
-      ".read": true,
-      "$slot": {
-        "$venue": {
-          ".write": true,
-          ".validate": "$venue === 'old' || $venue === 'new'"
-        }
-      }
-    }
-  }
-}
-```
-
-(Anyone with the link can edit, which is fine for a small trusted team. There is no login, so "who you are" is just the dropdown.)
-
-### Step 3: Deploy on GitHub Pages
-1. Create a GitHub repo and upload `index.html`, `style.css`, `config.js`, `app.js`.
-2. **Settings → Pages → Deploy from branch → `main` / root**.
-3. Share the link `https://<your-username>.github.io/<repo>/` with Miss Inem and Mr Femi.
+## Setup (Firebase)
+1. **Authentication:** Firebase console → Build → Authentication → Get started → Sign-in method → **Email/Password** → Enable.
+2. **Rules:** Realtime Database → Rules → paste the contents of `database.rules.json` → Publish.
+3. **First admin:** sign up on the site, then Authentication → Users → copy your **User UID**. In Realtime Database → Data, add the child `admins` → `<your UID>` with the value `true`. Reload the site: you now see the Admin tab. Approve yourself (link to Mr Stanley).
+4. **Everyone else:** they create an account, wait on the "Almost there" screen, and you approve them in Admin.
+5. **Deploy:** upload to GitHub, and run `firebase deploy --only hosting` for the Firebase link. Both links share one database.
 
 ## Customising
-At the top of `app.js`: `DAYS`, `HOURS`, `VENUES`, `INSTRUCTORS` (names and colours).
+`constants.js`: `DAYS`, `HOURS`, `VENUES`, `INSTRUCTORS` (names and colours).
 
 ## Local demo mode
-Until `config.js` is filled in, the app saves to your own browser only (other tabs in the same browser sync). Good for trying it out.
+Until `config.js` has real Firebase values, the app runs in your browser only (the first account you create becomes the admin). Good for trying things out.
